@@ -1,0 +1,6 @@
+/home/bon/shitfartland/glfw-3.3.8/build/CMakeFiles/edit_cache.dir
+/home/bon/shitfartland/glfw-3.3.8/build/CMakeFiles/rebuild_cache.dir
+/home/bon/shitfartland/glfw-3.3.8/build/src/CMakeFiles/update_mappings.dir
+/home/bon/shitfartland/glfw-3.3.8/build/src/CMakeFiles/glfw.dir
+/home/bon/shitfartland/glfw-3.3.8/build/src/CMakeFiles/edit_cache.dir
+/home/bon/shitfartland/glfw-3.3.8/build/src/CMakeFiles/rebuild_cache.dir

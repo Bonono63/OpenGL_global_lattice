@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/BoilerPlate.dir/src/main.cpp.o "CMakeFiles/BoilerPlate.dir/glfw-3.3.8/deps/glad_gl.c.o" -o BoilerPlate  -Wl,-rpath,/home/bon/voxel_world_lattice/glfw-3.3.8/src glfw-3.3.8/src/libglfw.so.3.3 /usr/lib/libOpenGL.so /usr/lib/libGLX.so /usr/lib/libGLU.so -lm 

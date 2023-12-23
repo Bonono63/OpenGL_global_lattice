@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/threads.dir/threads.c.o CMakeFiles/threads.dir/__/deps/tinycthread.c.o CMakeFiles/threads.dir/__/deps/glad_gl.c.o -o threads  ../src/libglfw3.a -lm /usr/lib/librt.a -ldl /usr/lib/libX11.so 

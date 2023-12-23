@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/title.dir/title.c.o CMakeFiles/title.dir/__/deps/glad_gl.c.o -o title  ../src/libglfw3.a -lm /usr/lib/librt.a -lm -ldl /usr/lib/libX11.so 

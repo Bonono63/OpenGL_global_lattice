@@ -1,9 +1,0 @@
-/home/bon/voxel_world_lattice/CMakeFiles/GLD.dir
-/home/bon/voxel_world_lattice/CMakeFiles/edit_cache.dir
-/home/bon/voxel_world_lattice/CMakeFiles/rebuild_cache.dir
-/home/bon/voxel_world_lattice/glfw-3.3.8/CMakeFiles/edit_cache.dir
-/home/bon/voxel_world_lattice/glfw-3.3.8/CMakeFiles/rebuild_cache.dir
-/home/bon/voxel_world_lattice/glfw-3.3.8/src/CMakeFiles/update_mappings.dir
-/home/bon/voxel_world_lattice/glfw-3.3.8/src/CMakeFiles/glfw.dir
-/home/bon/voxel_world_lattice/glfw-3.3.8/src/CMakeFiles/edit_cache.dir
-/home/bon/voxel_world_lattice/glfw-3.3.8/src/CMakeFiles/rebuild_cache.dir

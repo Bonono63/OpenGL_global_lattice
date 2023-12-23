@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/sharing.dir/sharing.c.o CMakeFiles/sharing.dir/__/deps/glad_gl.c.o -o sharing  ../src/libglfw3.a -lm /usr/lib/librt.a -lm -ldl /usr/lib/libX11.so 

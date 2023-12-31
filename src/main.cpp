@@ -10,109 +10,108 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+#include <fstream>
+#include <filesystem>
 
-long long int getFileLength(const char * path)
+
+// free out!
+int readfile(const char * path, char** out)
 {
-        FILE *file;
-        file = fopen(path, "r");
-	
-        if(file == NULL)
+        std::ifstream file (path);
+        if (file.is_open())
         {
-                printf("unable to open file %s\n", path);
-                return -1;
+                long long file_size = std::filesystem::file_size(path);
+                
+                *out = (char*) malloc((file_size+1)*sizeof(char));
+                for (long long i = 0 ; i < file_size; i++)
+                {
+                        char c;
+                        file.get(c);
+                        *(*out+i) = c;
+                }
+                // terminating byte because final character isn't one?
+                *(*out+file_size) = '\0';
+                file.close();
         }
         else
         {
-                fseek(file, 0, SEEK_END); 
-                long long int size = ftell(file);
-                fclose(file);
-                return size;
-	      }
+                printf("Unable to read file at: %s\n",path);
+                file.close();
+                return -1;
+        }
+        return 0;
 }
-
-
-unsigned char* readFile(const char * path)
-{
-	FILE *file;
-	file = fopen(path, "r");
-
-	if(file == NULL)
-	{
-		printf("unable to open file titled \"%s\".\n", path);
-	}
-	
-	long long int size = getFileLength(path);
-	
-	unsigned char * out = (unsigned char*)malloc((size+1)*sizeof(unsigned char));
-
-	for (unsigned long long int i = 0 ; i < size ; i++)
-	{
-		char c = fgetc(file);
-		out[i] = c;
-	}
-	fclose(file);
-	out[size] = '\0';
-	return (unsigned char*)out;
-}
-
 
 unsigned int loadShader(const char* vertexShaderPath, const char* fragmentShaderPath)
 {
-	unsigned char* vertexSource = readFile(vertexShaderPath);
-	unsigned char* fragmentSource = readFile(fragmentShaderPath);
-
+        // VERTEX
+        char * vertex_source;
+        int vertex_file = readfile(vertexShaderPath, &vertex_source);
+        if (vertex_file != 0)
+        {
+                printf("unable to compile shader. vertex shader couldn't be found.");
+                return -1;
+        }
 	
-	//VERTEX SHADER PARSE
-	unsigned int vertexShader;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, (const char* const *)&vertexSource, NULL);
-	glCompileShader(vertexShader);
+	    unsigned int vertexShader;
+	    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	    glShaderSource(vertexShader, 1, (const char* const *)&vertex_source, NULL);
+	    glCompileShader(vertexShader);
 
-	int vertex_success;
-	char vertexInfoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vertex_success);
-	if(!vertex_success)
-	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, vertexInfoLog);
-		printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED: %s\n",vertexInfoLog);
-	}
-	free(vertexSource);
+	    int vertex_success;
+	    char vertexInfoLog[512];
+	    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vertex_success);
+	    if(!vertex_success)
+	    {
+	    	glGetShaderInfoLog(vertexShader, 512, NULL, vertexInfoLog);
+	    	printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED: %s\n",vertexInfoLog);
+	    }
+	    free(vertex_source);
 
-	//FRAGMENT SHADER PARSE
-	unsigned int fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, (const char* const *)&fragmentSource, NULL);
-	glCompileShader(fragmentShader);
-	
-	int fragment_success;
-	char fragmentInfoLog[512];
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fragment_success);
-	if(!fragment_success)
-	{
-		glGetShaderInfoLog(fragmentShader, 512, NULL, fragmentInfoLog);
-		printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED: %s\n",fragmentInfoLog);
-	}
-	free(fragmentSource);
+        // FRAGMENT
 
-	//SHADER PROGRAM
-	unsigned int shader = glCreateProgram();
-	glAttachShader(shader, vertexShader);
-	glAttachShader(shader, fragmentShader);
-	glLinkProgram(shader);
+        char * fragment_source;
+        int fragment_file = readfile(fragmentShaderPath, &fragment_source);
+        if (fragment_file != 0)
+        {
+                printf("unable to compile shader. fragment shader couldn't be found.");
+                return -1;
+        }
 
-	int shader_success;
-	char shaderInfoLog[512];
-	glGetProgramiv(shader, GL_LINK_STATUS, &shader_success);
-	if(!shader_success)
-	{
-		glGetProgramInfoLog(shader, 512, NULL, shaderInfoLog);
-		printf("ERROR::SHADER::PROGRAM::COMPILATION_FAILED: %s\n",shaderInfoLog);
-	}
-	
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	    unsigned int fragmentShader;
+	    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	    glShaderSource(fragmentShader, 1, (const char* const *)&fragment_source, NULL);
+	    glCompileShader(fragmentShader);
+	    
+	    int fragment_success;
+	    char fragmentInfoLog[512];
+	    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fragment_success);
+	    if(!fragment_success)
+	    {
+	    	glGetShaderInfoLog(fragmentShader, 512, NULL, fragmentInfoLog);
+	    	printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED: %s\n",fragmentInfoLog);
+	    }
+	    free(fragment_source);
 
-	return shader;
+	    //SHADER PROGRAM
+	    unsigned int shader = glCreateProgram();
+	    glAttachShader(shader, vertexShader);
+	    glAttachShader(shader, fragmentShader);
+	    glLinkProgram(shader);
+
+	    int shader_success;
+	    char shaderInfoLog[512];
+	    glGetProgramiv(shader, GL_LINK_STATUS, &shader_success);
+	    if(!shader_success)
+	    {
+	    	glGetProgramInfoLog(shader, 512, NULL, shaderInfoLog);
+	    	printf("ERROR::SHADER::PROGRAM::COMPILATION_FAILED: %s\n",shaderInfoLog);
+	    }
+	    
+	    glDeleteShader(vertexShader);
+	    glDeleteShader(fragmentShader);
+
+	    return shader;
 }
 
 
@@ -227,7 +226,8 @@ int main(int argc, char* argv[])
 	    if (!glfwInit())
 		        return -1;
 
-	    window = glfwCreateWindow(width,height, "Boiler Plate!", NULL, NULL);
+        
+	    window = glfwCreateWindow(width,height, "global lattice test", NULL, NULL);
 	    if(!window)
 	    {
 	    	glfwTerminate();
@@ -237,6 +237,8 @@ int main(int argc, char* argv[])
 
 	    glfwMakeContextCurrent(window);
 	    gladLoadGL(glfwGetProcAddress);
+
+        printf("%s\n",glGetString(GL_VERSION));
 
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -252,6 +254,8 @@ int main(int argc, char* argv[])
 	    }
 
         glBindVertexArray(VAO);
+
+        printf("loaded properly");
 
         while(!glfwWindowShouldClose(window))
         {

@@ -1,3 +1,0 @@
-/home/bon/shitfartland/glfw-3.3.8/docs/CMakeFiles/docs.dir
-/home/bon/shitfartland/glfw-3.3.8/docs/CMakeFiles/edit_cache.dir
-/home/bon/shitfartland/glfw-3.3.8/docs/CMakeFiles/rebuild_cache.dir

@@ -4,7 +4,9 @@ project(GlobalLatticeDemo VERSION 1.0)
 
 set(CMAKE_BUILD_TYPE=Debug)
 
-set(GLFW_SOURCE_DIR "glfw-3.3.8")
+set(C_STANDARD 23)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(GLFW_SOURCE_DIR "glfw-3.3.9")
 
 add_subdirectory("${GLFW_SOURCE_DIR}")
 

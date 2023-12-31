@@ -1,3 +1,4 @@
+#include "glm/fwd.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <glad/gl.h>
@@ -151,13 +152,13 @@ int loadTexture(const char* path, unsigned int* out)
 
 float vertex_data[] = {
         // VERTEX           COLOR           UV
-        -1.0f, -1.0f, 0.0f,  1.0f,1.0f,1.0f, 0.0f,0.0f,
+        -1.0f,-1.0f, 0.0f,  1.0f,1.0f,1.0f, 0.0f,0.0f,
         -1.0f, 1.0f, 0.0f,  1.0f,0.0f,0.0f, 0.0f,1.0f,
          1.0f, 1.0f, 0.0f,  0.0f,0.0f,0.0f, 1.0f,1.0f,
 
-        -1.0f, -1.0f, 0.0f, 1.0f,1.0f,1.0f, 0.0f,0.0f,
-         1.0f, -1.0f, 0.0f, 0.0f,1.0f,1.0f, 1.0f,0.0f,
-         1.0f,  1.0f, 0.0f, 0.0f,1.0f,1.0f, 1.0f,1.0f
+        -1.0f,-1.0f, 0.0f,  1.0f,1.0f,1.0f, 0.0f,0.0f,
+         1.0f,-1.0f, 0.0f,  1.0f,0.0f,0.0f, 1.0f,0.0f,
+         1.0f, 1.0f, 0.0f,  0.0f,0.0f,0.0f, 1.0f,1.0f
 };
 
 
@@ -170,48 +171,81 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 class Mesh
 {
-public:
-        unsigned int VBO_id;
-        unsigned int boundVAO;
-        unsigned int Shader_id;
+        public:
+                unsigned int vbo;
+                unsigned int vao;
+                unsigned int shader_program;
+        
+                Mesh(const char* vertexPath, const char* fragmentPath, unsigned int VAO_id, float* vertexData, int vertexDataSize)
+                {
+                        vao = VAO_id;
+                        // Create new individual Vertex Buffer Object  
+                        glGenBuffers(1, &vbo);
+                        // Unbind the current buffers just in case
+                        glBindVertexArray(0);
+                        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+                        // Bind the requested VAO
+                        glBindVertexArray(VAO_id);
+                                
+                        // set the current VBO
+                        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+                        // set the vertex data
+        	            glBufferData(GL_ARRAY_BUFFER, vertexDataSize, vertexData, GL_STATIC_DRAW);
+        
+                        //  Configure the vertex data attributes
+        
+        	            //Vertex Postion
+        	            glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)0);
+        	            glEnableVertexAttribArray(0);
+        
+                        //Color Postion
+                        glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(3*sizeof(float)));
+                        glEnableVertexAttribArray(1);
+        
+        	            //UV Postion
+        	            glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(5*sizeof(float)));
+        	            glEnableVertexAttribArray(2);
+        
+        	            // unbind/release the currently set buffers 
+                        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        	            glBindVertexArray(0);
+        
+                        shader_program = loadShader(vertexPath, fragmentPath);
+                }
+        
+                void draw(GLFWwindow* window)
+                {
+                        glBindVertexArray(vao);
 
-        Mesh(const char* vertexPath, const char* fragmentPath, unsigned int VAO_id, float* vertexData, int vertexDataSize)
-        {
-                boundVAO = VAO_id;
-                // Create new individual Vertex Buffer Object  
-                glGenBuffers(1, &VBO_id);
-                // Unbind the current buffers just in case
-                glBindVertexArray(0);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                        glUseProgram(shader_program);
+                        set_shader_value_f("TIME", (float) glfwGetTime());
 
-                // Bind the requested VAO
-                glBindVertexArray(VAO_id);
-                
-                // set the current VBO
-                glBindBuffer(GL_ARRAY_BUFFER, VBO_id);
-                // set the vertex data
-	            glBufferData(GL_ARRAY_BUFFER, vertexDataSize, vertexData, GL_STATIC_DRAW);
+                        int width,height;
+                        glfwGetWindowSize(window, &width, &height);
+                        glm::vec2 resolution = glm::vec2(width, height);
+                        set_shader_value_vec2("RESOLUTION", resolution);
 
-                //  Configure the vertex data attributes
+                        glDrawArrays(GL_TRIANGLES, 0, 6);
+                }
+        
+                void set_shader_value_f(const char * loc, float value)
+                {
+                        int location = glGetUniformLocation(shader_program, loc);
+                        if (location == -1)
+                                printf("Unable to locate uniform %s in shader %d",loc,shader_program);
+                        else
+                        glUniform1f(location, value);
+                }
 
-	            //Vertex Postion
-	            glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)0);
-	            glEnableVertexAttribArray(0);
-
-                //Color Postion
-                glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(3*sizeof(float)));
-                glEnableVertexAttribArray(1);
-
-	            //UV Postion
-	            glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(5*sizeof(float)));
-	            glEnableVertexAttribArray(2);
-
-	            // unbind/release the currently set buffers 
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-	            glBindVertexArray(0);
-
-                Shader_id = loadShader(vertexPath, fragmentPath);
-        }
+                void set_shader_value_vec2(const char * loc, glm::vec2 value)
+                {
+                        int location = glGetUniformLocation(shader_program, loc);
+                        if (location == -1)
+                                printf("Unable to locate uniform %s in shader %d",loc,shader_program);
+                        else
+                                glUniform2f(location, value.x, value.y);
+                }
 };
 
 
@@ -253,20 +287,14 @@ int main(int argc, char* argv[])
 	    	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	    }
 
-        glBindVertexArray(VAO);
-
         printf("loaded properly");
 
         while(!glfwWindowShouldClose(window))
         {
-		        float time = glfwGetTime();
-
                 glClearColor(0.4f,0.5f,0.6f,1.0f);
 		        glClear(GL_COLOR_BUFFER_BIT);
 
-		        glUseProgram(test.Shader_id);
-	        
-                glDrawArrays(GL_TRIANGLES, 0, 6);
+                test.draw(window);
 
 		        glfwSwapBuffers(window);
 

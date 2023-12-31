@@ -6,7 +6,7 @@ set(CMAKE_BUILD_TYPE=Debug)
 
 set(C_STANDARD 23)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(GLFW_SOURCE_DIR "glfw-3.3.9")
+set(GLFW_SOURCE_DIR "glfw")
 
 add_subdirectory("${GLFW_SOURCE_DIR}")
 

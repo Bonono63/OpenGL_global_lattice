@@ -22,6 +22,7 @@ include_directories(
 	"${GLFW_SOURCE_DIR}/deps"
 	"${GLFW_SOURCE_DIR}/include"
 	"include/"
+    "glm/glm"
 	)
 
 add_executable(GLD src/main.cpp ${GLAD_GL})

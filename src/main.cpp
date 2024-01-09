@@ -8,8 +8,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
 #include <fstream>
@@ -49,7 +47,7 @@ void set_shader_value_float(const char * loc, float value, unsigned int shader_p
 {
         int location = glGetUniformLocation(shader_program, loc);
         if (location == -1)
-                printf("Unable to locate uniform %s in shader %d\n",loc,shader_program);
+                return;//printf("Unable to locate uniform %s in shader %d\n",loc,shader_program);
         else
                 glUniform1f(location, value);
 }
@@ -59,7 +57,7 @@ void set_shader_value_vec2(const char * loc, glm::vec2 value, unsigned int shade
 {
         int location = glGetUniformLocation(shader_program, loc);
         if (location == -1)
-                printf("Unable to locate uniform %s in shader %d\n",loc,shader_program);
+                return;//printf("Unable to locate uniform %s in shader %d\n",loc,shader_program);
         else
                 glUniform2f(location, value.x, value.y);
 }
@@ -69,7 +67,7 @@ void set_shader_value_float_array(const char * loc, float* value, int size, unsi
 {
         int location = glGetUniformLocation(shader_program, loc);
         if (location == -1)
-                printf("Unable to locate uniform %s in shader %d\n",loc,shader_program);
+                return;//printf("Unable to locate uniform %s in shader %d\n",loc,shader_program);
         else
                 glUniform1fv(location,size,value);
 }
@@ -79,7 +77,7 @@ void set_shader_value_matrix4(const char * loc, glm::mat4 value, unsigned int sh
 {
         int location = glGetUniformLocation(shader_program, loc);
         if (location == -1)
-                printf("Unable to locate uniform %s in shader %d\n",loc,shader_program);
+                return;//printf("Unable to locate uniform %s in shader %d\n",loc,shader_program);
         else
                 glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 }
@@ -234,19 +232,43 @@ int load_texture_array(const char** path, size_t path_size, unsigned int* out_te
 
 
 // creates the textures to be displayed on chunk lattices
-int texture_packer(const char** pathes, size_t pathes_size, int** chunk_data, int chunk_width, int chunk_height, int chunk_depth, unsigned int* out_texture_id)
+int texture_packer(int** chunk_data, int chunk_data_size, int chunk_width, int chunk_height, int chunk_depth, unsigned int* out_texture_id)
 {
         glGenTextures(1, out_texture_id);
         glBindTexture(GL_TEXTURE_2D, *out_texture_id);
 
-        int texture_width = chunk_width*6*chunk_depth;
+        int texture_width = chunk_width*chunk_depth;
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_width, chunk_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_width*16, chunk_height*16, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
-        for(int i = 0 ; i < 1024 ; i ++)
+
+        int width, height, nr_channels;
+        unsigned char * texture = stbi_load("resources/dirt.png", &width, &height, &nr_channels, 0);
+
+        int air_width, air_height, air_nr_channels;
+        unsigned char * air_texture = stbi_load("resources/air.png", &air_width, &air_height, &air_nr_channels, 0);
+
+
+        printf("%s %d %d %d\n","resources/dirt.png",width,height,nr_channels);
+
+        for(int i = 0 ; i < chunk_data_size ; i ++)
         {
-                
+                int x = (i % chunk_width) + ((i/chunk_width) % chunk_width);
+                int y = ((i/chunk_width/chunk_width) % chunk_width);
+                switch (*(*chunk_data+i)) {
+                        case 0:
+                                //printf("%d\n", *(*chunk_data+i));
+                                glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 16,16, GL_RGBA, GL_UNSIGNED_BYTE, air_texture);
+                                break;
+                        case 1:
+                                //printf("%d\n", *(*chunk_data+i));
+                                //printf("index: %d x: %d y: %d\n",i,x,y);
+                                glTexImage2D(GL_TEXTURE_2D, 0, x, y, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, texture);
+                                break;
+                }
         }
+
+        stbi_image_free(texture);
         return 0;
 }
 
@@ -257,9 +279,9 @@ float vertex_data[] = {
         -1.0f,  1.0f, 0.0f, 1.0f,0.0f,
          1.0f,  1.0f, 0.0f, 0.0f,0.0f,
 
-        -1.0f, -1.0f, 0.0f, 1.0f,1.0f,
+         1.0f,  1.0f, 0.0f, 0.0f,0.0f,
          1.0f, -1.0f, 0.0f, 0.0f,1.0f,
-         1.0f,  1.0f, 0.0f, 0.0f,0.0f
+        -1.0f, -1.0f, 0.0f, 1.0f,1.0f
 };
 
 
@@ -269,11 +291,19 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
         glViewport(0,0,width,height);
 }
 
+typedef struct Texture
+{
+        int width;
+        int height;
+        int nr_channels;
+        unsigned int identifier;
+}Texture;
+
 
 typedef struct Camera
 {
-        const float fov = 60.0f;
-        const float speed = 1.0f;
+        const float fov = 70.0f;
+        const float speed = 4.0f;
         const float sensitivity = 0.05f;
         float yaw,pitch;
         glm::vec3 position = glm::vec3(0.0f,0.0f,-5.0f);
@@ -299,8 +329,6 @@ void camera_process(struct Camera* camera)
         camera->up = glm::cross(camera->direction, camera->right);
 
         camera->view = glm::lookAt(camera->position, camera->position+camera->front, camera->up);
-
-        camera->view = glm::translate(camera->view, camera->position);
 }
 
 
@@ -324,7 +352,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         y_offset *= camera.sensitivity;
 
         camera.yaw += x_offset;
-        camera.pitch += y_offset;
+        camera.pitch -= y_offset;
 
         if (camera.pitch > 89.0f)
                 camera.pitch = 89.0f;
@@ -340,15 +368,19 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 void input_process(GLFWwindow* window, struct Camera* camera, float frame_delta)
 {
         if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-                glfwTerminate();
+                glfwSetWindowShouldClose(window, true);
         if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
                 camera->position += camera->speed * frame_delta * camera->front;
         if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
                 camera->position -= camera->speed * frame_delta * camera->front;
         if(glfwGetKey(window, GLFW_KEY_A))
-                camera->position += glm::normalize(glm::cross(camera->front, camera->up)) * camera->speed * frame_delta;
+                camera->position -= glm::normalize(glm::cross(camera->front, camera->up)) * camera->speed * frame_delta;
         if(glfwGetKey(window, GLFW_KEY_D))
                 camera->position += glm::normalize(glm::cross(camera->front, camera->up)) * camera->speed * frame_delta;
+        if(glfwGetKey(window, GLFW_KEY_Z))
+                camera->position -= camera->up * camera->speed * frame_delta;
+        if(glfwGetKey(window, GLFW_KEY_SPACE))
+                camera->position += camera->up * camera->speed * frame_delta;
 }
 
 
@@ -410,6 +442,7 @@ void draw_mesh(GLFWwindow* window, struct Mesh* mesh, struct Camera* camera)
         glBindVertexArray(mesh->vao);
 
         glUseProgram(mesh->shader_program);
+        
         set_shader_value_float("TIME", (float) glfwGetTime(), mesh->shader_program);
 
         int width,height;
@@ -417,7 +450,7 @@ void draw_mesh(GLFWwindow* window, struct Mesh* mesh, struct Camera* camera)
         glm::vec2 resolution = glm::vec2(width, height);
         set_shader_value_vec2("RESOLUTION", resolution, mesh->shader_program);
 
-        camera->projection = glm::perspective(glm::radians(camera->fov), (float)width/height, 0.1f, 100.0f);
+        camera->projection = glm::perspective(glm::radians(camera->fov), (float)width/height, 0.001f, 100.0f);
 
         set_shader_value_matrix4("model", mesh->model_matrix, mesh->shader_program);
         set_shader_value_matrix4("view", camera->view, mesh->shader_program);
@@ -444,6 +477,7 @@ void draw_lattice(GLFWwindow* window, struct Lattice* lattice, struct Camera* ca
 {
         glBindVertexArray(lattice->vao);
 
+        // TODO set the texture buffer once the texture packer is done
         glUseProgram(lattice->shader_program);
 
         set_shader_value_float("TIME", (float) glfwGetTime(), lattice->shader_program);
@@ -452,16 +486,9 @@ void draw_lattice(GLFWwindow* window, struct Lattice* lattice, struct Camera* ca
         glfwGetWindowSize(window, &width, &height);
         glm::vec2 resolution = glm::vec2(width, height);
         set_shader_value_vec2("RESOLUTION", resolution, lattice->shader_program);
+        
+        camera->projection = glm::perspective(glm::radians(camera->fov), (float)width/height, 0.001f, 300.0f);
 
-        //set_shader_value_float_array("data", chunk_data, chunk_data_size, mesh->shader_program);
-        
-        //printf("width: %d, height: %d\n",width,height);
-        
-        camera->projection = glm::perspective(glm::radians(camera->fov), (float)width/height, 0.1f, 100.0f);
-
-        //mesh->model_matrix = glm::rotate(mesh->model_matrix, (float) glfwGetTime()*glm::radians(1.0f), glm::vec3(0.0f,0.0f,1.0f));
-        //mesh->model_matrix = glm::translate(mesh->model_matrix, glm::vec3(0.0f,0.0f,0.0f));
-        
         set_shader_value_matrix4("model", lattice->model_matrix, lattice->shader_program);
         set_shader_value_matrix4("view", camera->view, lattice->shader_program);
         set_shader_value_matrix4("projection", camera->projection, lattice->shader_program);
@@ -470,55 +497,368 @@ void draw_lattice(GLFWwindow* window, struct Lattice* lattice, struct Camera* ca
 }
 
 
-struct Lattice create_lattice(const char* vertexPath, const char* fragmentPath, unsigned int vao_id, float* vbo_data, int vbo_size)
+struct Lattice create_lattice(const char* vertexPath, const char* fragmentPath, unsigned int vao_id, float* vbo_data, size_t vbo_size)
 {
-        return (struct Lattice) {};
+        //printf("lattice data size: %llu\n",vbo_size);
+        struct Lattice result;
+        result.vao = vao_id;
+        result.vbo_size = vbo_size;
+        // Create new individual Vertex Buffer Object  
+        glGenBuffers(1, &result.vbo);
+        // Unbind the current buffers just in case
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+        // Bind the requested VAO
+        glBindVertexArray(result.vao);
+                               
+        // set the current VBO
+        glBindBuffer(GL_ARRAY_BUFFER, result.vbo);
+        // set the vertex data
+        glBufferData(GL_ARRAY_BUFFER, vbo_size, vbo_data, GL_STATIC_DRAW);
+        
+        //  Configure the vertex data attributes
+        
+        //Vertex Postion
+        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)0);
+        glEnableVertexAttribArray(0);
+               
+        //UV Postion
+        glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)(3*sizeof(float)));
+        glEnableVertexAttribArray(1);
+        
+        // unbind/release the currently set buffers 
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+        
+        result.shader_program = load_shader(vertexPath, fragmentPath);
+        if (result.shader_program == -1)
+        {
+                printf("shader program didn't compile correctly\n");
+        }
+
+        return result;
 }
 
 
 void create_lattice_mesh_data(int width, int height, int depth, float voxel_scale, float** out, size_t* out_size)
 {
-        const int stride = 5;
+        //number of floats per vertex
+        const int vertex_stride = 5;
+        //number of vertices per index / number of vertices required for a face
+        const int index_stride = 6;
+        
+        long long int face_offset = 0;
 
         printf("width: %d, height: %d, depth: %d\n",width, height, depth);
         // 5 floats per vertex, width*2 + height*2 + depth*2 = face count, face_count * 6 * 5 * sizeof(float) = byte count
         size_t face_count = (width*2) + (height*2) + (depth*2);
-        size_t byte_count = face_count * 6 * stride * sizeof(float);
-        printf("lattice chunk face count: %lld\n", face_count);
-        printf("number of bytes for the lattice: %lld", byte_count);
+        // face count * 6 vertices * 5 floats per vertex (3 floats for position, 2 for UV) * sizeof float (should be 4 bytes/32bits)
+        size_t byte_count = face_count * index_stride * vertex_stride * sizeof(float);
+        printf("size of float: %lu\n",sizeof(float));
+        printf("lattice chunk face count: %zu\n", face_count);
+        printf("number of bytes for the lattice mesh: %zu\n", byte_count);
         
         *out = (float *) malloc(byte_count);
-                
+        *out_size = byte_count;
+
+        if (*out == NULL)
+        {
+                printf("Unable to create lattice data heap.\n");
+        }
+        
         // Negative Z faces
         for (int z = 0 ; z < depth ; z++)
         {
-                // vectors
-                *out[z*stride+0] = 0.0f*voxel_scale*depth;
-                *out[z*stride+1] = 0.0f;
-                *out[z*stride+2] = 0.0f*voxel_scale*depth;
-                //*out+(x*stride)+1;
-                //*out+(x*stride)+2;
-                //*out+(x*stride)+3;
-                //*out+(x*stride)+4;
+                int vertex_index = z*index_stride*vertex_stride;
+                //printf("z: %d, vertex index: %d\n",z,vertex_index);
+                
+                // BOTTOM FACE
+                *(*out+vertex_index+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+2) = -z*voxel_scale;
+                *(*out+vertex_index+3) = 0.0f;
+                *(*out+vertex_index+4) = 1.0f;
 
-                //*out+(x*stride+1) = -1.0f*voxel_scale*depth;
-                //*out+(x*stride+1)+1;
-                //*out+(x*stride+1)+2;
-                //*out+(x*stride+1)+3;
-                //*out+(x*stride+1)+4;
+                *(*out+vertex_index+5+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+5+1) = 0.0f;
+                *(*out+vertex_index+5+2) = -z*voxel_scale;
+                *(*out+vertex_index+5+3) = 0.0f;
+                *(*out+vertex_index+5+4) = 0.0f;
 
-                //*out+(x*stride+2) = -1.0f*voxel_scale*depth;
-                //*out+(x*stride+2)+1;
-                //*out+(x*stride+2)+2;
-                //*out+(x*stride+2)+3;
-                //*out+(x*stride+2)+4;
+                *(*out+vertex_index+10+0) = 0.0f;
+                *(*out+vertex_index+10+1) = 0.0f;
+                *(*out+vertex_index+10+2) = -z*voxel_scale;
+                *(*out+vertex_index+10+3) = 1.0f;
+                *(*out+vertex_index+10+4) = 0.0f;
+
+                // TOP FACE
+                *(*out+vertex_index+15+0) = 0.0f;
+                *(*out+vertex_index+15+1) = 0.0f;
+                *(*out+vertex_index+15+2) = -z*voxel_scale;
+                *(*out+vertex_index+15+3) = 1.0f;
+                *(*out+vertex_index+15+4) = 0.0f;
+
+                *(*out+vertex_index+20+0) = 0.0f;
+                *(*out+vertex_index+20+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+20+2) = -z*voxel_scale;
+                *(*out+vertex_index+20+3) = 1.0f;
+                *(*out+vertex_index+20+4) = 1.0f;
+
+                *(*out+vertex_index+25+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+25+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+25+2) = -z*voxel_scale;
+                *(*out+vertex_index+25+3) = 0.0f;
+                *(*out+vertex_index+25+4) = 1.0f;
         }
+        
+        face_offset += depth*(index_stride*vertex_stride);
 
-        // Negative X faces
-        //for (int x = 0 ; x < width ; x++)
-        //{
-        //        *out;
-        //}           
+        //printf("face offset: %lld\n",face_offset);
+
+        // POSITIVE Z FACES
+        // TODO reorder vertices to go counter clockwise
+        for (int z = 0 ; z < depth ; z++)
+        {
+                int vertex_index = (z*index_stride*vertex_stride)+face_offset;
+                //printf("z: %d, vertex index: %d\n",z,vertex_index);
+                
+                // BOTTOM FACE
+                *(*out+vertex_index+0) = 0.0f;
+                *(*out+vertex_index+1) = 0.0f;
+                *(*out+vertex_index+2) = -z*voxel_scale+1;
+                *(*out+vertex_index+3) = 0.0f;
+                *(*out+vertex_index+4) = 0.0f;
+
+                *(*out+vertex_index+5+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+5+1) = 0.0f;
+                *(*out+vertex_index+5+2) = -z*voxel_scale+1;
+                *(*out+vertex_index+5+3) = 1.0f;
+                *(*out+vertex_index+5+4) = 0.0f;
+
+                *(*out+vertex_index+10+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+10+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+10+2) = -z*voxel_scale+1;
+                *(*out+vertex_index+10+3) = 1.0f;
+                *(*out+vertex_index+10+4) = 1.0f;
+
+                // TOP FACE
+                *(*out+vertex_index+15+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+15+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+15+2) = -z*voxel_scale+1;
+                *(*out+vertex_index+15+3) = 1.0f;
+                *(*out+vertex_index+15+4) = 1.0f;
+
+                *(*out+vertex_index+20+0) = 0.0f;
+                *(*out+vertex_index+20+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+20+2) = -z*voxel_scale+1;
+                *(*out+vertex_index+20+3) = 0.0f;
+                *(*out+vertex_index+20+4) = 1.0f;
+
+                *(*out+vertex_index+25+0) = 0.0f;
+                *(*out+vertex_index+25+1) = 0.0f;
+                *(*out+vertex_index+25+2) = -z*voxel_scale+1;
+                *(*out+vertex_index+25+3) = 0.0f;
+                *(*out+vertex_index+25+4) = 0.0f;
+        }
+        face_offset += depth*index_stride*vertex_stride;
+
+        //printf("face offset: %lld\n",face_offset);
+
+        // NEGATIVE X FACES
+        for (int x = 0 ; x < width ; x++)
+        {
+                int vertex_index = (x*index_stride*vertex_stride)+face_offset;
+                //printf("x: %d, vertex index: %d\n",x,vertex_index);
+                
+                // BOTTOM FACE
+                *(*out+vertex_index+0) = x*voxel_scale+1.0f;
+                *(*out+vertex_index+1) = 0.0f;
+                *(*out+vertex_index+2) = 1.0f;
+                *(*out+vertex_index+3) = 0.0f;
+                *(*out+vertex_index+4) = 0.0f;
+
+                *(*out+vertex_index+5+0) = x*voxel_scale+1.0f;
+                *(*out+vertex_index+5+1) = 0.0f;
+                *(*out+vertex_index+5+2) = -1.0f*voxel_scale*depth+1.0f;
+                *(*out+vertex_index+5+3) = 1.0f;
+                *(*out+vertex_index+5+4) = 0.0f;
+
+                *(*out+vertex_index+10+0) = x*voxel_scale+1.0f;
+                *(*out+vertex_index+10+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+10+2) = -1.0f*voxel_scale*depth+1.0f;
+                *(*out+vertex_index+10+3) = 1.0f;
+                *(*out+vertex_index+10+4) = 1.0f;
+
+                // TOP FACE
+                *(*out+vertex_index+15+0) = x*voxel_scale+1.0f;
+                *(*out+vertex_index+15+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+15+2) = -1.0f*voxel_scale*depth+1.0f;
+                *(*out+vertex_index+15+3) = 1.0f;
+                *(*out+vertex_index+15+4) = 1.0f;
+
+                *(*out+vertex_index+20+0) = x*voxel_scale+1.0f;
+                *(*out+vertex_index+20+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+20+2) = 1.0f;
+                *(*out+vertex_index+20+3) = 0.0f;
+                *(*out+vertex_index+20+4) = 1.0f;
+
+                *(*out+vertex_index+25+0) = x*voxel_scale+1.0f;
+                *(*out+vertex_index+25+1) = 0.0f;
+                *(*out+vertex_index+25+2) = 1.0f;
+                *(*out+vertex_index+25+3) = 0.0f;
+                *(*out+vertex_index+25+4) = 0.0f;
+        }
+        face_offset += width*index_stride*vertex_stride;
+
+        //printf("face offset: %lld\n",face_offset);
+
+        // POSITIVE X FACES
+        for (int x = 0 ; x < width ; x++)
+        {
+                int vertex_index = (x*index_stride*vertex_stride)+face_offset;
+                //printf("x: %d, vertex index: %d\n",x,vertex_index);
+                
+                // BOTTOM FACE
+                *(*out+vertex_index+0) = x*voxel_scale;
+                *(*out+vertex_index+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+2) = -1.0f*voxel_scale*depth+1.0f;
+                *(*out+vertex_index+3) = 0.0f;
+                *(*out+vertex_index+4) = 0.0f;                
+
+                *(*out+vertex_index+5+0) = x*voxel_scale;
+                *(*out+vertex_index+5+1) = 0.0f;
+                *(*out+vertex_index+5+2) = -1.0f*voxel_scale*depth+1.0f;
+                *(*out+vertex_index+5+3) = 0.0f;
+                *(*out+vertex_index+5+4) = 0.0f;
+
+                *(*out+vertex_index+10+0) = x*voxel_scale;
+                *(*out+vertex_index+10+1) = 0.0f;
+                *(*out+vertex_index+10+2) = 1.0f;
+                *(*out+vertex_index+10+3) = 0.0f;
+                *(*out+vertex_index+10+4) = 0.0f;
+
+                // TOP FACE
+                *(*out+vertex_index+15+0) = x*voxel_scale;
+                *(*out+vertex_index+15+1) = 0.0f;
+                *(*out+vertex_index+15+2) = 1.0f;
+                *(*out+vertex_index+15+3) = 0.0f;
+                *(*out+vertex_index+15+4) = 0.0f;
+
+                *(*out+vertex_index+20+0) = x*voxel_scale;
+                *(*out+vertex_index+20+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+20+2) = 1.0f;
+                *(*out+vertex_index+20+3) = 0.0f;
+                *(*out+vertex_index+20+4) = 0.0f;
+
+                *(*out+vertex_index+25+0) = x*voxel_scale;
+                *(*out+vertex_index+25+1) = 1.0f*voxel_scale*height;
+                *(*out+vertex_index+25+2) = -1.0f*voxel_scale*depth+1.0f;
+                *(*out+vertex_index+25+3) = 0.0f;
+                *(*out+vertex_index+25+4) = 0.0f;
+        }
+        face_offset += width*index_stride*vertex_stride;
+
+        //printf("face offset: %lld\n",face_offset);
+
+        // NEGATIVE Y FACES
+        for (int y = 0 ; y < height ; y++)
+        {
+                int vertex_index = (y*index_stride*vertex_stride)+face_offset;
+                //printf("y: %d, vertex index: %d\n",y,vertex_index);
+                
+                // BOTTOM FACE
+                *(*out+vertex_index+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+1) = y*voxel_scale;
+                *(*out+vertex_index+2) = -1.0f*voxel_scale*depth+1.0f;
+                *(*out+vertex_index+3) = 0.0f;
+                *(*out+vertex_index+4) = 0.0f;
+
+                *(*out+vertex_index+5+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+5+1) = y*voxel_scale;
+                *(*out+vertex_index+5+2) = 1.0f;
+                *(*out+vertex_index+5+3) = 0.0f;
+                *(*out+vertex_index+5+4) = 0.0f;
+
+                *(*out+vertex_index+10+0) = 0.0f;
+                *(*out+vertex_index+10+1) = y*voxel_scale;
+                *(*out+vertex_index+10+2) = 1.0f;
+                *(*out+vertex_index+10+3) = 0.0f;
+                *(*out+vertex_index+10+4) = 0.0f;
+
+                // TOP FACE
+                *(*out+vertex_index+15+0) = 0.0f;
+                *(*out+vertex_index+15+1) = y*voxel_scale;
+                *(*out+vertex_index+15+2) = 1.0f;
+                *(*out+vertex_index+15+3) = 0.0f;
+                *(*out+vertex_index+15+4) = 0.0f;
+
+                *(*out+vertex_index+20+0) = 0.0f;
+                *(*out+vertex_index+20+1) = y*voxel_scale;
+                *(*out+vertex_index+20+2) = -1.0f*voxel_scale*width+1.0f;
+                *(*out+vertex_index+20+3) = 0.0f;
+                *(*out+vertex_index+20+4) = 0.0f;
+
+                *(*out+vertex_index+25+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+25+1) = y*voxel_scale;
+                *(*out+vertex_index+25+2) = -1.0f*voxel_scale*depth+1.0f;
+                *(*out+vertex_index+25+3) = 0.0f;
+                *(*out+vertex_index+25+4) = 0.0f;
+        }
+        face_offset += height*index_stride*vertex_stride;
+
+        //printf("face offset: %lld\n",face_offset);
+
+        // POSITIIVE Y FACES
+        for (int y = 0 ; y < height ; y++)
+        {
+                int vertex_index = (y*index_stride*vertex_stride)+face_offset;
+                //printf("y: %d, vertex index: %d\n",y,vertex_index);
+                
+                // BOTTOM FACE
+                *(*out+vertex_index+0) = 0.0f;
+                *(*out+vertex_index+1) = y*voxel_scale+1.0f;
+                *(*out+vertex_index+2) = 1.0f;
+                *(*out+vertex_index+3) = 0.0f;
+                *(*out+vertex_index+4) = 0.0f;
+
+                *(*out+vertex_index+5+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+5+1) = y*voxel_scale+1.0f;
+                *(*out+vertex_index+5+2) = 1.0f;
+                *(*out+vertex_index+5+3) = 0.0f;
+                *(*out+vertex_index+5+4) = 0.0f;
+
+                *(*out+vertex_index+10+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+10+1) = y*voxel_scale+1.0f;
+                *(*out+vertex_index+10+2) = -1.0f*voxel_scale*depth+1.0f;
+                *(*out+vertex_index+10+3) = 0.0f;
+                *(*out+vertex_index+10+4) = 0.0f;
+
+                // TOP FACE
+                *(*out+vertex_index+15+0) = 1.0f*voxel_scale*width;
+                *(*out+vertex_index+15+1) = y*voxel_scale+1.0f;
+                *(*out+vertex_index+15+2) = -1.0f*voxel_scale*depth+1.0f;
+                *(*out+vertex_index+15+3) = 0.0f;
+                *(*out+vertex_index+15+4) = 0.0f;
+
+                *(*out+vertex_index+20+0) = 0.0f;
+                *(*out+vertex_index+20+1) = y*voxel_scale+1.0f;
+                *(*out+vertex_index+20+2) = -1.0f*voxel_scale*width+1.0f;
+                *(*out+vertex_index+20+3) = 0.0f;
+                *(*out+vertex_index+20+4) = 0.0f;
+                
+                *(*out+vertex_index+25+0) = 0.0f;
+                *(*out+vertex_index+25+1) = y*voxel_scale+1.0f;
+                *(*out+vertex_index+25+2) = 1.0f;
+                *(*out+vertex_index+25+3) = 0.0f;
+                *(*out+vertex_index+25+4) = 0.0f;
+        }
+}
+
+
+void print_mat4(glm::mat4 mat)
+{
+        printf("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n",mat[0][0], mat[0][1],mat[0][2],mat[0][3],mat[1][0],mat[1][1],mat[1][2],mat[1][3],mat[2][0],mat[2][1],mat[2][2],mat[2][3],mat[3][0],mat[3][1],mat[3][2],mat[3][3]);
 }
 
 
@@ -533,9 +873,7 @@ int main(int argc, char* argv[])
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         GLFWwindow* window;
-	    int width,height;
-	    width = 16*32;
-	    height = 16*32;
+	    int width = 800,height = 600;
 
 	    if (!glfwInit())
 		        return -1;
@@ -562,48 +900,85 @@ int main(int argc, char* argv[])
 	    glGenVertexArrays(1, &VAO);
 
 
-        int lattice_width = 512;
-        int lattice_height = 512;
-        int lattice_depth = 512;
-	    float * lattice_data;
+        int lattice_width = 256, lattice_height = 256, lattice_depth = 256;
+        float * lattice_data;
         size_t lattice_data_size;
-        //create_lattice_mesh_data(lattice_width, lattice_height, lattice_depth, 1.0f, &lattice_data, &lattice_data_size);
+        create_lattice_mesh_data(lattice_width, lattice_height, lattice_depth, 1.0f, &lattice_data, &lattice_data_size);
 
         struct Mesh test = create_mesh("resources/genericVertex.glsl", "resources/genericFragment.glsl", VAO, vertex_data, sizeof(vertex_data));
 
-	    if (argc == 2){
+        printf("It was the lattice all along\n");
+
+        struct Lattice chicken = create_lattice("resources/genericVertex.glsl", "resources/genericFragment.glsl", VAO, lattice_data, lattice_data_size);
+
+        printf("passed the lattice data\n");
+
+        free(lattice_data);
+	    
+        if (argc == 2){
 	    	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	    }
 
-        /*
-        float chunk_data[1024];
+        int chunk_data_size = lattice_width*lattice_height*lattice_depth;
+        printf("chunk data size: %d\n",chunk_data_size);
+        int* chunk_data = (int*) malloc(chunk_data_size*sizeof(int));
+        printf("size of chunk_data: %lu\n",chunk_data_size*sizeof(int));
 
-        for (int i = 0 ; i < 1024 ; i++)
+        for (int i = 0 ; i < chunk_data_size/32 ; i++)
         {
-                chunk_data[i] = rand() % 2;
-                //printf("chunk_data[%d] = %f\n", i, chunk_data[i]);
+                int a = rand();
+                for (int j = 0 ; j < 32 ; j++)
+                {
+                        chunk_data[i+j] = (a << j) % 2;
+                        //printf("%d value: %d\n",i, chunk_data[i]);
+                }
         }
 
-        unsigned int textures;
-        const char * pathes[3];
-        pathes[0] = "resources/cobblestone.png";
-        pathes[1] = "resources/stone.png";
-        pathes[2] = "resources/oak_log.png";
-        size_t size = sizeof(pathes)/sizeof(pathes[0]);
-        
-        int textures_success = load_texture_array(pathes, size, &textures);
-        if (textures_success == -1)
-                return -1;
+        unsigned int lattice_chunk;
 
-        glBindTexture(GL_TEXTURE_2D_ARRAY, textures);
-*/
+        int texture_success = texture_packer(&chunk_data, chunk_data_size, lattice_width, lattice_height, lattice_depth, &lattice_chunk);
+
+        unsigned int test_texture;
+
+        int test_width,test_height,test_nrChannels;
+        unsigned char* dirt_data = stbi_load("resources/dirt.png", &test_width, &test_height, &test_nrChannels, 0);
+        unsigned char* air_data = stbi_load("resources/air.png", &test_width, &test_height, &test_nrChannels, 0);
+
+
+        glGenTextures(1, &test_texture);
+        glBindTexture(GL_TEXTURE_2D, test_texture);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, test_width*2, test_height*2, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, dirt_data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 16, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, dirt_data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 16, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, air_data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 16, 16, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, dirt_data);
+
+        stbi_image_free(dirt_data);
+        stbi_image_free(air_data);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+
+        //
+        glEnable(GL_BLEND);
+        glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
 
         float prev_frame_time = 0.0f;
 
+        glBindTexture(GL_TEXTURE_2D, test_texture);
+
         while(!glfwWindowShouldClose(window))
         {
                 float frame_delta = glfwGetTime() - prev_frame_time;
+                //printf("frame delta: %f\n",frame_delta);
                 prev_frame_time = glfwGetTime();
                 glClearColor(0.4f,0.5f,0.6f,1.0f);
 		        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -611,14 +986,20 @@ int main(int argc, char* argv[])
                 input_process(window, &camera, frame_delta);
 
                 camera_process(&camera);
-                printf("x: %f, y: %f, z: %f\n",camera.position.x, camera.position.y, camera.position.z);
-                draw_mesh(window, &test, &camera);
-                //draw_lattice(window, &test, &camera);
+                printf("frame delta: %f",frame_delta);
+                printf("position, x: %f, y: %f, z: %f\n",camera.position.x, camera.position.y, camera.position.z);
+                /*printf("view matrix:\n");
+                print_mat4(camera.view);
+                printf("projection matrix:\n");
+                print_mat4(camera.projection);*/
+                draw_lattice(window, &chicken, &camera);
 
 		        glfwSwapBuffers(window);
 
 		        glfwPollEvents();
 	    }
+
+        free(chunk_data);
 
         glfwTerminate();
 

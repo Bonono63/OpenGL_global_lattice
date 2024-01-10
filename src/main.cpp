@@ -257,12 +257,8 @@ int texture_packer(int** chunk_data, int chunk_data_size, int chunk_width, int c
                 int y = ((i/chunk_width/chunk_width) % chunk_width);
                 switch (*(*chunk_data+i)) {
                         case 0:
-                                //printf("%d\n", *(*chunk_data+i));
-                                glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 16,16, GL_RGBA, GL_UNSIGNED_BYTE, air_texture);
                                 break;
                         case 1:
-                                //printf("%d\n", *(*chunk_data+i));
-                                //printf("index: %d x: %d y: %d\n",i,x,y);
                                 glTexImage2D(GL_TEXTURE_2D, 0, x, y, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, texture);
                                 break;
                 }
@@ -303,7 +299,7 @@ typedef struct Texture
 typedef struct Camera
 {
         const float fov = 70.0f;
-        const float speed = 4.0f;
+        float speed = 4.0f;
         const float sensitivity = 0.05f;
         float yaw,pitch;
         glm::vec3 position = glm::vec3(0.0f,0.0f,-5.0f);
@@ -377,10 +373,14 @@ void input_process(GLFWwindow* window, struct Camera* camera, float frame_delta)
                 camera->position -= glm::normalize(glm::cross(camera->front, camera->up)) * camera->speed * frame_delta;
         if(glfwGetKey(window, GLFW_KEY_D))
                 camera->position += glm::normalize(glm::cross(camera->front, camera->up)) * camera->speed * frame_delta;
-        if(glfwGetKey(window, GLFW_KEY_Z))
-                camera->position -= camera->up * camera->speed * frame_delta;
+        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
+                camera->position -= glm::vec3(0.0,1.0,0.0) * camera->speed * frame_delta;
         if(glfwGetKey(window, GLFW_KEY_SPACE))
-                camera->position += camera->up * camera->speed * frame_delta;
+                camera->position += glm::vec3(0.0,1.0,0.0) * camera->speed * frame_delta;
+        if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL))
+                camera->speed = 8.0;
+        else
+                camera->speed = 4.0f;
 }
 
 
@@ -724,7 +724,7 @@ void create_lattice_mesh_data(int width, int height, int depth, float voxel_scal
                 *(*out+vertex_index+1) = 1.0f*voxel_scale*height;
                 *(*out+vertex_index+2) = -1.0f*voxel_scale*depth+1.0f;
                 *(*out+vertex_index+3) = 0.0f;
-                *(*out+vertex_index+4) = 0.0f;                
+                *(*out+vertex_index+4) = 1.0f;                
 
                 *(*out+vertex_index+5+0) = x*voxel_scale;
                 *(*out+vertex_index+5+1) = 0.0f;
@@ -735,49 +735,45 @@ void create_lattice_mesh_data(int width, int height, int depth, float voxel_scal
                 *(*out+vertex_index+10+0) = x*voxel_scale;
                 *(*out+vertex_index+10+1) = 0.0f;
                 *(*out+vertex_index+10+2) = 1.0f;
-                *(*out+vertex_index+10+3) = 0.0f;
+                *(*out+vertex_index+10+3) = 1.0f;
                 *(*out+vertex_index+10+4) = 0.0f;
 
                 // TOP FACE
                 *(*out+vertex_index+15+0) = x*voxel_scale;
                 *(*out+vertex_index+15+1) = 0.0f;
                 *(*out+vertex_index+15+2) = 1.0f;
-                *(*out+vertex_index+15+3) = 0.0f;
+                *(*out+vertex_index+15+3) = 1.0f;
                 *(*out+vertex_index+15+4) = 0.0f;
 
                 *(*out+vertex_index+20+0) = x*voxel_scale;
                 *(*out+vertex_index+20+1) = 1.0f*voxel_scale*height;
                 *(*out+vertex_index+20+2) = 1.0f;
-                *(*out+vertex_index+20+3) = 0.0f;
-                *(*out+vertex_index+20+4) = 0.0f;
+                *(*out+vertex_index+20+3) = 1.0f;
+                *(*out+vertex_index+20+4) = 1.0f;
 
                 *(*out+vertex_index+25+0) = x*voxel_scale;
                 *(*out+vertex_index+25+1) = 1.0f*voxel_scale*height;
                 *(*out+vertex_index+25+2) = -1.0f*voxel_scale*depth+1.0f;
                 *(*out+vertex_index+25+3) = 0.0f;
-                *(*out+vertex_index+25+4) = 0.0f;
+                *(*out+vertex_index+25+4) = 1.0f;
         }
         face_offset += width*index_stride*vertex_stride;
-
-        //printf("face offset: %lld\n",face_offset);
 
         // NEGATIVE Y FACES
         for (int y = 0 ; y < height ; y++)
         {
                 int vertex_index = (y*index_stride*vertex_stride)+face_offset;
-                //printf("y: %d, vertex index: %d\n",y,vertex_index);
-                
                 // BOTTOM FACE
                 *(*out+vertex_index+0) = 1.0f*voxel_scale*width;
                 *(*out+vertex_index+1) = y*voxel_scale;
                 *(*out+vertex_index+2) = -1.0f*voxel_scale*depth+1.0f;
-                *(*out+vertex_index+3) = 0.0f;
-                *(*out+vertex_index+4) = 0.0f;
+                *(*out+vertex_index+3) = 1.0f;
+                *(*out+vertex_index+4) = 1.0f;
 
                 *(*out+vertex_index+5+0) = 1.0f*voxel_scale*width;
                 *(*out+vertex_index+5+1) = y*voxel_scale;
                 *(*out+vertex_index+5+2) = 1.0f;
-                *(*out+vertex_index+5+3) = 0.0f;
+                *(*out+vertex_index+5+3) = 1.0f;
                 *(*out+vertex_index+5+4) = 0.0f;
 
                 *(*out+vertex_index+10+0) = 0.0f;
@@ -797,24 +793,20 @@ void create_lattice_mesh_data(int width, int height, int depth, float voxel_scal
                 *(*out+vertex_index+20+1) = y*voxel_scale;
                 *(*out+vertex_index+20+2) = -1.0f*voxel_scale*width+1.0f;
                 *(*out+vertex_index+20+3) = 0.0f;
-                *(*out+vertex_index+20+4) = 0.0f;
+                *(*out+vertex_index+20+4) = 1.0f;
 
                 *(*out+vertex_index+25+0) = 1.0f*voxel_scale*width;
                 *(*out+vertex_index+25+1) = y*voxel_scale;
                 *(*out+vertex_index+25+2) = -1.0f*voxel_scale*depth+1.0f;
-                *(*out+vertex_index+25+3) = 0.0f;
-                *(*out+vertex_index+25+4) = 0.0f;
+                *(*out+vertex_index+25+3) = 1.0f;
+                *(*out+vertex_index+25+4) = 1.0f;
         }
         face_offset += height*index_stride*vertex_stride;
-
-        //printf("face offset: %lld\n",face_offset);
 
         // POSITIIVE Y FACES
         for (int y = 0 ; y < height ; y++)
         {
                 int vertex_index = (y*index_stride*vertex_stride)+face_offset;
-                //printf("y: %d, vertex index: %d\n",y,vertex_index);
-                
                 // BOTTOM FACE
                 *(*out+vertex_index+0) = 0.0f;
                 *(*out+vertex_index+1) = y*voxel_scale+1.0f;
@@ -825,27 +817,27 @@ void create_lattice_mesh_data(int width, int height, int depth, float voxel_scal
                 *(*out+vertex_index+5+0) = 1.0f*voxel_scale*width;
                 *(*out+vertex_index+5+1) = y*voxel_scale+1.0f;
                 *(*out+vertex_index+5+2) = 1.0f;
-                *(*out+vertex_index+5+3) = 0.0f;
+                *(*out+vertex_index+5+3) = 1.0f;
                 *(*out+vertex_index+5+4) = 0.0f;
 
                 *(*out+vertex_index+10+0) = 1.0f*voxel_scale*width;
                 *(*out+vertex_index+10+1) = y*voxel_scale+1.0f;
                 *(*out+vertex_index+10+2) = -1.0f*voxel_scale*depth+1.0f;
-                *(*out+vertex_index+10+3) = 0.0f;
-                *(*out+vertex_index+10+4) = 0.0f;
+                *(*out+vertex_index+10+3) = 1.0f;
+                *(*out+vertex_index+10+4) = 1.0f;
 
                 // TOP FACE
                 *(*out+vertex_index+15+0) = 1.0f*voxel_scale*width;
                 *(*out+vertex_index+15+1) = y*voxel_scale+1.0f;
                 *(*out+vertex_index+15+2) = -1.0f*voxel_scale*depth+1.0f;
-                *(*out+vertex_index+15+3) = 0.0f;
-                *(*out+vertex_index+15+4) = 0.0f;
+                *(*out+vertex_index+15+3) = 1.0f;
+                *(*out+vertex_index+15+4) = 1.0f;
 
                 *(*out+vertex_index+20+0) = 0.0f;
                 *(*out+vertex_index+20+1) = y*voxel_scale+1.0f;
                 *(*out+vertex_index+20+2) = -1.0f*voxel_scale*width+1.0f;
                 *(*out+vertex_index+20+3) = 0.0f;
-                *(*out+vertex_index+20+4) = 0.0f;
+                *(*out+vertex_index+20+4) = 1.0f;
                 
                 *(*out+vertex_index+25+0) = 0.0f;
                 *(*out+vertex_index+25+1) = y*voxel_scale+1.0f;
@@ -900,7 +892,7 @@ int main(int argc, char* argv[])
 	    glGenVertexArrays(1, &VAO);
 
 
-        int lattice_width = 256, lattice_height = 256, lattice_depth = 256;
+        int lattice_width = 32, lattice_height = 32, lattice_depth = 32;
         float * lattice_data;
         size_t lattice_data_size;
         create_lattice_mesh_data(lattice_width, lattice_height, lattice_depth, 1.0f, &lattice_data, &lattice_data_size);
@@ -942,7 +934,7 @@ int main(int argc, char* argv[])
 
         int test_width,test_height,test_nrChannels;
         unsigned char* dirt_data = stbi_load("resources/dirt.png", &test_width, &test_height, &test_nrChannels, 0);
-        unsigned char* air_data = stbi_load("resources/air.png", &test_width, &test_height, &test_nrChannels, 0);
+        //unsigned char* air_data = stbi_load("resources/air.png", &test_width, &test_height, &test_nrChannels, 0);
 
 
         glGenTextures(1, &test_texture);
@@ -958,11 +950,11 @@ int main(int argc, char* argv[])
 
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, dirt_data);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 16, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, dirt_data);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 16, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, air_data);
+        //glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 16, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, air_data);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 16, 16, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, dirt_data);
 
         stbi_image_free(dirt_data);
-        stbi_image_free(air_data);
+        //stbi_image_free(air_data);
         glBindTexture(GL_TEXTURE_2D, 0);
 
 
@@ -978,8 +970,8 @@ int main(int argc, char* argv[])
         while(!glfwWindowShouldClose(window))
         {
                 float frame_delta = glfwGetTime() - prev_frame_time;
-                //printf("frame delta: %f\n",frame_delta);
                 prev_frame_time = glfwGetTime();
+                
                 glClearColor(0.4f,0.5f,0.6f,1.0f);
 		        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 

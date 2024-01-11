@@ -253,8 +253,12 @@ int texture_packer(int** chunk_data, int chunk_data_size, int chunk_width, int c
 
         for(int i = 0 ; i < chunk_data_size ; i ++)
         {
-                int x = (i % chunk_width) + ((i/chunk_width) % chunk_width);
-                int y = ((i/chunk_width/chunk_width) % chunk_width);
+                int x = (i/chunk_depth)%chunk_width;
+                int y = (i/chunk_width/chunk_depth)%chunk_height;
+                int z = i%chunk_depth;
+                //printf("index: %d, z: %d, x: %d, y: %d\n", i, z, x, y);
+
+
                 switch (*(*chunk_data+i)) {
                         case 0:
                                 break;
@@ -950,15 +954,12 @@ int main(int argc, char* argv[])
 
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, dirt_data);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 16, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, dirt_data);
-        //glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 16, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, air_data);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 16, 16, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, dirt_data);
 
         stbi_image_free(dirt_data);
-        //stbi_image_free(air_data);
         glBindTexture(GL_TEXTURE_2D, 0);
 
 
-        //
         glEnable(GL_BLEND);
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
@@ -978,7 +979,7 @@ int main(int argc, char* argv[])
                 input_process(window, &camera, frame_delta);
 
                 camera_process(&camera);
-                printf("frame delta: %f",frame_delta);
+                printf("frame delta: %f ",frame_delta);
                 printf("position, x: %f, y: %f, z: %f\n",camera.position.x, camera.position.y, camera.position.z);
                 /*printf("view matrix:\n");
                 print_mat4(camera.view);

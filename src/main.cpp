@@ -423,13 +423,15 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
         // Negative Z faces
         for (int z = 0 ; z < size ; z++)
         {
+                float fortnite = ((float)z)/(size);
+                printf("layer: %f\n",fortnite);
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+1) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
 
                 vertex_offset+=vertex_stride;
 
@@ -438,7 +440,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
 
                 vertex_offset+=vertex_stride;
 
@@ -447,7 +449,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
 
                 vertex_offset+=vertex_stride;
 
@@ -457,7 +459,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
 
                 vertex_offset+=vertex_stride;
 
@@ -466,7 +468,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
 
                 vertex_offset+=vertex_stride;
 
@@ -475,22 +477,22 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
 
                 vertex_offset+=vertex_stride;
         }
 
         // POSITIVE Z FACES
-        // TODO reorder vertices to go counter clockwise
         for (int z = 0 ; z < size ; z++)
         {
+                float fortnite = ((float) z)/(size-1);
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = 0.0f;
                 *(*out+vertex_offset+1) = 0.0f;
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
 
                 vertex_offset+=vertex_stride;
 
@@ -499,7 +501,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
 
                 vertex_offset+=vertex_stride;
 
@@ -509,7 +511,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
 
                 vertex_offset+=vertex_stride;
 
@@ -519,7 +521,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
 
                 vertex_offset+=vertex_stride;
 
@@ -528,7 +530,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
 
                 vertex_offset+=vertex_stride;
 
@@ -537,7 +539,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = fortnite;
         
                 vertex_offset+=vertex_stride;
         }
@@ -545,7 +547,8 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
         // NEGATIVE X FACES
         for (int x = 0 ; x < size ; x++)
         {
-                int reverse = (size-1)-x;
+                float reverse = (size-1)-x;
+                printf("nx faces: %f\n",reverse);
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = x*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+1) = 0.0f;

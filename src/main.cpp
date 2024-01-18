@@ -13,19 +13,6 @@
 #include <fstream>
 #include <filesystem>
 
-// 20 bytes per voxel
-// this only meant to be stored in a block palette
-// or a something like that, we need to avoid instancing it for every single instance
-typedef struct Voxel
-{
-        float r;
-        float g;
-        float b;
-        float a;
-        int temperature;
-}Voxel;
-
-
 typedef struct Lattice
 {
         int width;
@@ -423,13 +410,19 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
         // Negative Z faces
         for (int z = 0 ; z < size ; z++)
         {
+                float layer = (float)z/(size-1);
+                if (z == size-1)
+                {
+                        layer -= 0.000001;
+                }
+                //printf("z: %d layer: %f\n",z,layer);
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+1) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -438,7 +431,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -447,7 +440,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -457,7 +450,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -466,7 +459,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -475,13 +468,12 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = z;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
         }
 
         // POSITIVE Z FACES
-        // TODO reorder vertices to go counter clockwise
         for (int z = 0 ; z < size ; z++)
         {
                 // BOTTOM FACE
@@ -546,6 +538,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
         for (int x = 0 ; x < size ; x++)
         {
                 int reverse = (size-1)-x;
+                //printf("x: %d, size-x: %d\n",x,reverse);
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = x*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+1) = 0.0f;
@@ -828,7 +821,7 @@ int main(int argc, char* argv[])
 
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-        int lattice_size = 3;
+        int lattice_size = 512;
         float * lattice_data;
         size_t lattice_data_size;
         create_lattice_mesh_data(lattice_size, 0.1f, &lattice_data, &lattice_data_size);
@@ -851,10 +844,12 @@ int main(int argc, char* argv[])
                 *(chunk_data+i) = rand()%2;
         }
 
+        float start_time = glfwGetTime();
+
         unsigned int lattice_chunk_albedo;
         
         glGenTextures(1, &lattice_chunk_albedo);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, lattice_chunk_albedo);
+        glBindTexture(GL_TEXTURE_3D, lattice_chunk_albedo);
 
         unsigned char* stone = (unsigned char * ) malloc(4*sizeof(char));
 
@@ -882,37 +877,69 @@ int main(int argc, char* argv[])
         *(xp+2) = 0x00;
         *(xp+3) = 0xFF;
 
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, lattice_size, lattice_size, lattice_size, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        unsigned char * xzp = (unsigned char *) malloc(4*sizeof(char));
+        *(xzp) = 0x90;
+        *(xzp+1) = 0x00;
+        *(xzp+2) = 0x9F;
+        *(xzp+3) = 0xFF;
 
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, lattice_size, lattice_size, lattice_size, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
-        float start_time = glfwGetTime();
-        printf("texture packer start time: %f\n",start_time);
-        for (int i  = 0 ; i < chunk_data_size ; i++)
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        unsigned char* test = (unsigned char *) malloc(chunk_data_size*4*sizeof(unsigned char));
+
+        printf("\n");
+        for (size_t i = 0 ; i < chunk_data_size ; i++)
         {
-                int x=(i/lattice_size)%lattice_size,y=(i/lattice_size/lattice_size)%lattice_size,z=i%lattice_size;
-                //printf("index: %d position: %d,%d,%d,  value: %d\n",i,x,y,z,*(chunk_data+i));
-                switch (*(chunk_data+i))
+                size_t pos = i*4;
+                switch(*(chunk_data+i))
                 {
                         case 0:
+                                *(test+pos) = 0x00;
+                                *(test+pos+1) = 0x00;
+                                *(test+pos+2) = 0x00;
+                                *(test+pos+3) = 0x00;
                                 break;
                         case 1:
-                                glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, x, y, z, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, stone);
+                                *(test+pos) = *stone;
+                                *(test+pos+1) = *stone+1;
+                                *(test+pos+2) = *stone+2;
+                                *(test+pos+3) = *stone+3;
                                 break;
                 }
         }
+
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, lattice_size, lattice_size, lattice_size, GL_RGBA, GL_UNSIGNED_BYTE, test);
+
+        //        //printf("texture packer start time: %f\n",start_time);
+//        for (int i  = 0 ; i < chunk_data_size ; i++)
+//        {
+//                int x=(i/lattice_size)%lattice_size,y=(i/lattice_size/lattice_size)%lattice_size,z=i%lattice_size;
+//                switch (*(chunk_data+i))
+//                {
+//                        case 0:
+//                                break;
+//                        case 1:
+//                                glTexSubImage3D(GL_TEXTURE_3D, 0, x, y, z, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, stone);
+//                                break;
+//                }
+//        }
+        
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, original);
+
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, lattice_size-1, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, zp);
+       
+        glTexSubImage3D(GL_TEXTURE_3D, 0, lattice_size-1, 0, 0, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, xp);
+
+        glTexSubImage3D(GL_TEXTURE_3D, 0, lattice_size-1, 0, lattice_size-1, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, xzp);
+
         printf("texture packer end time: %f\n",glfwGetTime()-start_time);
 
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, original);
-
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 1, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, zp);
-       
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 1, 0, 0, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, xp);
-
-        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+        glBindTexture(GL_TEXTURE_3D, 0);
 
         free(original);
         free(zp);
@@ -929,7 +956,7 @@ int main(int argc, char* argv[])
 
         float prev_frame_time = 0.0f;
 
-        glBindTexture(GL_TEXTURE_2D_ARRAY, lattice_chunk_albedo);
+        glBindTexture(GL_TEXTURE_3D, lattice_chunk_albedo);
 
         while(!glfwWindowShouldClose(window))
         {

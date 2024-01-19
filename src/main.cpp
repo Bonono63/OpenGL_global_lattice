@@ -423,15 +423,17 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
         // Negative Z faces
         for (int z = 0 ; z < size ; z++)
         {
-                float fortnite = ((float)z)/(size);
-                printf("layer: %f\n",fortnite);
+                float layer = ((float)z)/(size-1);
+                if (z == size-1)
+                        layer-=0.000001;
+                printf("layer: %f\n",layer);
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+1) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -440,7 +442,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -449,7 +451,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -459,7 +461,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -468,7 +470,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -477,7 +479,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale;
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
         }
@@ -485,14 +487,16 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
         // POSITIVE Z FACES
         for (int z = 0 ; z < size ; z++)
         {
-                float fortnite = ((float) z)/(size-1);
+                float layer = ((float)z)/(size-1);
+                if (z == size-1)
+                        layer-=0.000001;
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = 0.0f;
                 *(*out+vertex_offset+1) = 0.0f;
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -501,7 +505,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -511,7 +515,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -521,7 +525,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 0.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -530,7 +534,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 1.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
 
                 vertex_offset+=vertex_stride;
 
@@ -539,7 +543,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+2) = -z*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 1.0f;
                 *(*out+vertex_offset+4) = 0.0f;
-                *(*out+vertex_offset+5) = fortnite;
+                *(*out+vertex_offset+5) = layer;
         
                 vertex_offset+=vertex_stride;
         }
@@ -547,13 +551,15 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
         // NEGATIVE X FACES
         for (int x = 0 ; x < size ; x++)
         {
-                float reverse = (size-1)-x;
-                printf("nx faces: %f\n",reverse);
+                float layer = 1.0f-((float)x)/(size-1);
+                if (x == 0)
+                        layer -= 0.000001;
+                printf("nx layer: %f\n",layer);
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = x*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+1) = 0.0f;
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 0.0f;
                 *(*out+vertex_offset+5) = 0.0f;
 
@@ -562,7 +568,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+0) = x*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+1) = 0.0f;
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 0.0f;
                 *(*out+vertex_offset+5) = 1.0f;
 
@@ -571,7 +577,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+0) = x*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+1) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 1.0f;
                 *(*out+vertex_offset+5) = 1.0f;
 
@@ -581,7 +587,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+0) = x*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+1) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 1.0f;
                 *(*out+vertex_offset+5) = 1.0f;
 
@@ -590,7 +596,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+0) = x*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+1) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 1.0f;
                 *(*out+vertex_offset+5) = 0.0f;
 
@@ -599,7 +605,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+0) = x*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+1) = 0.0f;
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 0.0f;
                 *(*out+vertex_offset+5) = 0.0f;
         
@@ -609,12 +615,15 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
         // POSITIVE X FACES
         for (int x = 0 ; x < size ; x++)
         {
-                int reverse = (size-1)-x;
+                float layer = 1.0f-((float)x)/(size-1);
+                if (x == 0)
+                        layer -= 0.000001;
+                printf("px layer: %f\n",layer);
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = x*voxel_scale;
                 *(*out+vertex_offset+1) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 1.0f;
                 *(*out+vertex_offset+5) = 1.0f;
 
@@ -623,7 +632,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+0) = x*voxel_scale;
                 *(*out+vertex_offset+1) = 0.0f;
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 0.0f;
                 *(*out+vertex_offset+5) = 1.0f;
 
@@ -632,7 +641,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+0) = x*voxel_scale;
                 *(*out+vertex_offset+1) = 0.0f;
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 0.0f;
                 *(*out+vertex_offset+5) = 0.0f;
 
@@ -642,7 +651,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+0) = x*voxel_scale;
                 *(*out+vertex_offset+1) = 0.0f;
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 0.0f;
                 *(*out+vertex_offset+5) = 0.0f;
 
@@ -651,7 +660,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+0) = x*voxel_scale;
                 *(*out+vertex_offset+1) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 1.0f;
                 *(*out+vertex_offset+5) = 0.0f;
 
@@ -660,7 +669,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+0) = x*voxel_scale;
                 *(*out+vertex_offset+1) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
-                *(*out+vertex_offset+3) = reverse;
+                *(*out+vertex_offset+3) = layer;
                 *(*out+vertex_offset+4) = 1.0f;
                 *(*out+vertex_offset+5) = 1.0f;
         
@@ -670,12 +679,15 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
         // NEGATIVE Y FACES
         for (int y = 0 ; y < size ; y++)
         {
+                float layer = ((float)y)/(size-1);
+                if (y == size-1)
+                        layer-=0.000001;
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+1) = y*voxel_scale;
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 0.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 1.0f;
 
                 vertex_offset+=vertex_stride;
@@ -684,7 +696,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+1) = y*voxel_scale;
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
                 *(*out+vertex_offset+3) = 0.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 0.0f;
 
                 vertex_offset+=vertex_stride;
@@ -693,7 +705,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+1) = y*voxel_scale;
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 0.0f;
 
                 vertex_offset+=vertex_stride;
@@ -703,7 +715,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+1) = y*voxel_scale;
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 0.0f;
 
                 vertex_offset+=vertex_stride;
@@ -712,7 +724,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+1) = y*voxel_scale;
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 1.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 1.0f;
 
                 vertex_offset+=vertex_stride;
@@ -721,7 +733,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+1) = y*voxel_scale;
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 0.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 1.0f;
                 
                 vertex_offset+=vertex_stride;
@@ -730,12 +742,15 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
         // POSITIVE Y FACES
         for (int y = 0 ; y < size ; y++)
         {
+                float layer = ((float)y)/(size-1);
+                if (y == size-1)
+                        layer-=0.000001;
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = 0.0f;
                 *(*out+vertex_offset+1) = y*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 0.0f;
 
                 vertex_offset+=vertex_stride;
@@ -744,7 +759,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+1) = y*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
                 *(*out+vertex_offset+3) = 0.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 0.0f;
 
                 vertex_offset+=vertex_stride;
@@ -753,7 +768,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+1) = y*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 0.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 1.0f;
 
                 vertex_offset+=vertex_stride;
@@ -763,7 +778,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+1) = y*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 0.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 1.0f;
 
                 vertex_offset+=vertex_stride;
@@ -772,7 +787,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+1) = y*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+2) = -1.0f*voxel_scale*size+(1.0f*voxel_scale);
                 *(*out+vertex_offset+3) = 1.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 1.0f;
                 
                 vertex_offset+=vertex_stride;
@@ -781,7 +796,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 *(*out+vertex_offset+1) = y*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+2) = 1.0f*voxel_scale;
                 *(*out+vertex_offset+3) = 1.0f;
-                *(*out+vertex_offset+4) = y;
+                *(*out+vertex_offset+4) = layer;
                 *(*out+vertex_offset+5) = 0.0f;
                 
                 vertex_offset+=vertex_stride;
@@ -831,7 +846,7 @@ int main(int argc, char* argv[])
 
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-        int lattice_size = 3;
+        int lattice_size = 512;
         float * lattice_data;
         size_t lattice_data_size;
         create_lattice_mesh_data(lattice_size, 0.1f, &lattice_data, &lattice_data_size);
@@ -857,7 +872,7 @@ int main(int argc, char* argv[])
         unsigned int lattice_chunk_albedo;
         
         glGenTextures(1, &lattice_chunk_albedo);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, lattice_chunk_albedo);
+        glBindTexture(GL_TEXTURE_3D, lattice_chunk_albedo);
 
         unsigned char* stone = (unsigned char * ) malloc(4*sizeof(char));
 
@@ -880,17 +895,23 @@ int main(int argc, char* argv[])
         *(zp+3) = 0xFF;
 
         unsigned char * xp = (unsigned char *) malloc(4*sizeof(char));
-        *(xp) = 0x90;
+        *(xp) = 0x70;
         *(xp+1) = 0xFF;
         *(xp+2) = 0x00;
         *(xp+3) = 0xFF;
 
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, lattice_size, lattice_size, lattice_size, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        unsigned char * zxp = (unsigned char *) malloc(4*sizeof(char));
+        *(zxp) = 0xF0;
+        *(zxp+1) = 0x00;
+        *(zxp+2) = 0x5A;
+        *(zxp+3) = 0xFF;
 
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, lattice_size, lattice_size, lattice_size, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         float start_time = glfwGetTime();
         printf("texture packer start time: %f\n",start_time);
@@ -903,24 +924,27 @@ int main(int argc, char* argv[])
                         case 0:
                                 break;
                         case 1:
-                                glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, x, y, z, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, stone);
+                                glTexSubImage3D(GL_TEXTURE_3D, 0, x, y, z, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, stone);
                                 break;
                 }
         }
         printf("texture packer end time: %f\n",glfwGetTime()-start_time);
 
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, original);
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, original);
 
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 1, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, zp);
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, lattice_size-1, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, zp);
        
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 1, 0, 0, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, xp);
+        glTexSubImage3D(GL_TEXTURE_3D, 0, lattice_size-1, 0, 0, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, xp);
 
-        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+        glTexSubImage3D(GL_TEXTURE_3D, 0, lattice_size-1, 0, lattice_size-1, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, zxp);
+
+        glBindTexture(GL_TEXTURE_3D, 0);
 
         free(original);
         free(zp);
         free(xp);
         free(stone);
+        free(zxp);
 
         if (argc == 2){
 	    	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -932,7 +956,7 @@ int main(int argc, char* argv[])
 
         float prev_frame_time = 0.0f;
 
-        glBindTexture(GL_TEXTURE_2D_ARRAY, lattice_chunk_albedo);
+        glBindTexture(GL_TEXTURE_3D, lattice_chunk_albedo);
 
         while(!glfwWindowShouldClose(window))
         {

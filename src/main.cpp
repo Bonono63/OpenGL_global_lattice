@@ -340,7 +340,7 @@ void draw_lattice(GLFWwindow* window, struct Lattice* lattice, struct Camera* ca
         glm::vec2 resolution = glm::vec2(width, height);
         set_shader_value_vec2("RESOLUTION", resolution, lattice->shader_program);
         
-        camera->projection = glm::perspective(glm::radians(camera->fov), (float)width/height, 0.001f, 300.0f);
+        camera->projection = glm::perspective(glm::radians(camera->fov), (float)width/height, 0.001f, 3000.0f);
 
         set_shader_value_matrix4("model", lattice->model_matrix, lattice->shader_program);
         set_shader_value_matrix4("view", camera->view, lattice->shader_program);
@@ -426,7 +426,6 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 float layer = ((float)z)/(size-1);
                 if (z == size-1)
                         layer-=0.000001;
-                printf("layer: %f\n",layer);
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = 1.0f*voxel_scale*size;
                 *(*out+vertex_offset+1) = 1.0f*voxel_scale*size;
@@ -554,7 +553,6 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 float layer = 1.0f-((float)x)/(size-1);
                 if (x == 0)
                         layer -= 0.000001;
-                printf("nx layer: %f\n",layer);
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = x*voxel_scale+(1.0f*voxel_scale);
                 *(*out+vertex_offset+1) = 0.0f;
@@ -618,7 +616,6 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 float layer = 1.0f-((float)x)/(size-1);
                 if (x == 0)
                         layer -= 0.000001;
-                printf("px layer: %f\n",layer);
                 // BOTTOM FACE
                 *(*out+vertex_offset+0) = x*voxel_scale;
                 *(*out+vertex_offset+1) = 1.0f*voxel_scale*size;
@@ -801,14 +798,18 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
                 
                 vertex_offset+=vertex_stride;
         }
-
-        printf("vertex_offset: %lld\n",vertex_offset);
 }
 
 
 void print_mat4(glm::mat4 mat)
 {
         printf("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n",mat[0][0], mat[0][1],mat[0][2],mat[0][3],mat[1][0],mat[1][1],mat[1][2],mat[1][3],mat[2][0],mat[2][1],mat[2][2],mat[2][3],mat[3][0],mat[3][1],mat[3][2],mat[3][3]);
+}
+
+
+void lattice_compensation()
+{
+        ;
 }
 
 
@@ -866,8 +867,10 @@ int main(int argc, char* argv[])
 
         for (int i = 0 ; i < chunk_data_size ; i++)
         {
-                *(chunk_data+i) = rand()%2;
+                *(chunk_data+i) = rand()%3;
         }
+
+        float start_time = glfwGetTime();
 
         unsigned int lattice_chunk_albedo;
         
@@ -881,12 +884,12 @@ int main(int argc, char* argv[])
         *(stone+2) = 0xFF;
         *(stone+3) = 0xFF;
 
-        unsigned char* original = (unsigned char*) malloc(4*sizeof(char));
+        unsigned char* origin = (unsigned char*) malloc(4*sizeof(char));
 
-        *(original) = 0xFF;
-        *(original+1) = 0x00;
-        *(original+2) = 0x00;
-        *(original+3) = 0xFF;
+        *(origin) = 0xFF;
+        *(origin+1) = 0x00;
+        *(origin+2) = 0x00;
+        *(origin+3) = 0xFF;
         
         unsigned char* zp = (unsigned char* ) malloc(4*sizeof(char));
         *(zp) = 0x00;
@@ -908,29 +911,44 @@ int main(int argc, char* argv[])
 
         glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, lattice_size, lattice_size, lattice_size, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
+
+        unsigned char * test = (unsigned char *) malloc(chunk_data_size*4*sizeof(char));
+
+        for (int i = 0 ; i < chunk_data_size ; i++)
+        {
+                unsigned char * address = test+(i*4);
+                switch(*(chunk_data+i))
+                {
+                        case 0:
+                                *(address+0) = 0x00;
+                                *(address+1) = 0x00;
+                                *(address+2) = 0x00;
+                                *(address+3) = 0x00;
+                                break;
+                        case 1:
+                                *(address+0) = 0x00;
+                                *(address+1) = 0x00;
+                                *(address+2) = 0xFF;
+                                *(address+3) = 0xFF;
+                                break;
+                        case 2:
+                                *(address+0) = 0xFF;
+                                *(address+1) = 0x00;
+                                *(address+2) = 0x00;
+                                *(address+3) = 0x88;
+                                break;
+
+                }
+        }
+
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        float start_time = glfwGetTime();
-        printf("texture packer start time: %f\n",start_time);
-        for (int i  = 0 ; i < chunk_data_size ; i++)
-        {
-                int x=(i/lattice_size)%lattice_size,y=(i/lattice_size/lattice_size)%lattice_size,z=i%lattice_size;
-                //printf("index: %d position: %d,%d,%d,  value: %d\n",i,x,y,z,*(chunk_data+i));
-                switch (*(chunk_data+i))
-                {
-                        case 0:
-                                break;
-                        case 1:
-                                glTexSubImage3D(GL_TEXTURE_3D, 0, x, y, z, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, stone);
-                                break;
-                }
-        }
-        printf("texture packer end time: %f\n",glfwGetTime()-start_time);
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, lattice_size-1, lattice_size-1, lattice_size-1, GL_RGBA, GL_UNSIGNED_BYTE, test);
 
-        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, original);
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, origin);
 
         glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, lattice_size-1, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, zp);
        
@@ -938,30 +956,46 @@ int main(int argc, char* argv[])
 
         glTexSubImage3D(GL_TEXTURE_3D, 0, lattice_size-1, 0, lattice_size-1, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, zxp);
 
+        printf("texture packer end time: %f\n",glfwGetTime()-start_time);
+
         glBindTexture(GL_TEXTURE_3D, 0);
 
-        free(original);
+        free(origin);
         free(zp);
         free(xp);
         free(stone);
         free(zxp);
+        free(test);
 
         if (argc == 2){
 	    	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	    }
         
         glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
 
-        float prev_frame_time = 0.0f;
-
         glBindTexture(GL_TEXTURE_3D, lattice_chunk_albedo);
+
+        double previous_frame_time,current_frame_time,frame_delta = 0.0f;
+        unsigned int frame_count = 0;
+
+        glfwSwapInterval(0);
 
         while(!glfwWindowShouldClose(window))
         {
-                float frame_delta = glfwGetTime() - prev_frame_time;
-                prev_frame_time = glfwGetTime();
+                current_frame_time = glfwGetTime();
+                frame_delta = current_frame_time - previous_frame_time;
+                frame_count++;
+                if (frame_delta >= 1.0 / 30.0)
+                {
+                        char title[30];
+                        sprintf(title, "time: %f fps: %f", (frame_delta/frame_count) * 1000, (1.0f/frame_delta) * frame_count);
+                        glfwSetWindowTitle(window, title);
+                        previous_frame_time = current_frame_time;
+                        frame_count = 0;
+                }
                 
                 glClearColor(0.4f,0.5f,0.6f,1.0f);
 		        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

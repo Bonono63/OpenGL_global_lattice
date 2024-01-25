@@ -847,7 +847,7 @@ int main(int argc, char* argv[])
 
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-        int lattice_size = 512;
+        int lattice_size = 256;
         float * lattice_data;
         size_t lattice_data_size;
         create_lattice_mesh_data(lattice_size, 0.1f, &lattice_data, &lattice_data_size);

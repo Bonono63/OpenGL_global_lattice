@@ -412,7 +412,7 @@ void create_lattice_mesh_data(int size, float voxel_scale, float** out, size_t* 
         printf("float count: %zu\n",float_count);
         printf("number of bytes for the lattice mesh: %zu\n", float_count*sizeof(float));
         
-        *out = (float *) malloc(byte_count);
+        *out = (float *) calloc(1, byte_count);
         *out_size = byte_count;
 
         if (*out == NULL)
@@ -926,7 +926,7 @@ int main(int argc, char* argv[])
                                 *(address+3) = 0x00;
                                 break;
                         case 1:
-                                *(address+0) = 0x00;
+                                *(address+0) = 0xDF;
                                 *(address+1) = 0x00;
                                 *(address+2) = 0xFF;
                                 *(address+3) = 0xFF;
@@ -934,8 +934,8 @@ int main(int argc, char* argv[])
                         case 2:
                                 *(address+0) = 0xFF;
                                 *(address+1) = 0x00;
-                                *(address+2) = 0x00;
-                                *(address+3) = 0x88;
+                                *(address+2) = 0xFF;
+                                *(address+3) = 0xFF;
                                 break;
 
                 }
